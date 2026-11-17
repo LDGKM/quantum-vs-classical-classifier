@@ -22,7 +22,7 @@ Projet 1 sur 4 d'une série IA × informatique quantique :
 
 | | Comment |
 |---|---|
-| 🌐 **En ligne** | Ouvrir [l'application en ligne](https://quantique-vs-classique.streamlit.app) |
+| 🌐 **En ligne** | Ouvrir [l'application en ligne](https://quantum-vs-classical-classifier-u8vx7n2dy9mqvjxpqktxka.streamlit.app/) |
 | 🪟 🍎 🐧 **Hors ligne** | Télécharger le fichier de son système dans les [Releases](https://github.com/LDGKM/quantum-vs-classical-classifier/releases), le dézipper et le lancer |
 
 L'application permet de choisir le jeu de données, le nombre de qubits et de couches, puis affiche
@@ -38,7 +38,7 @@ le tableau comparatif, les graphiques, le circuit quantique entraîné et sa fro
 2. *Create app* → *Deploy a public app from GitHub* :
    - Repository : `LDGKM/quantum-vs-classical-classifier`, branche `main` ;
    - Main file path : `streamlit_cloud/streamlit_app.py` ;
-   - App URL : `quantique-vs-classique` ;
+   - App URL : laisser celle proposée, ou en choisir une plus courte (modifiable ensuite dans *Settings*) ;
    - *Advanced settings* → Python **3.12**.
 3. *Deploy*. La première installation prend quelques minutes ; ensuite, chaque push sur `main` met l'application à jour.
 
@@ -120,7 +120,9 @@ de paramètres que le réseau de neurones. Toute la question du projet est de sa
 ├── notebooks/
 │   └── 01_premiers_qubits.ipynb   qubits, mesure, intrication, premier VQC
 ├── tests/test_smoke.py
+├── experiments/run_study.py    étude complète (5 graines, 2 à 6 qubits) → results/study/
 ├── docs/rapport.tex            rapport du projet (LaTeX)
+├── docs/article.tex            article scientifique (LaTeX, deux colonnes)
 └── results/                    sorties des benchmarks
 ```
 
@@ -128,16 +130,22 @@ de paramètres que le réseau de neurones. Toute la question du projet est de sa
 
 - [x] **Phase 1 — Bases** : qubits, mesure, intrication, encodage (notebook 01)
 - [x] **Phase 2 — Modèles** : VQC, noyau quantique, références classiques, benchmark
-- [ ] **Phase 3 — Étude systématique** : faire varier qubits, couches, taille des données ; tracer accuracy et temps
+- [x] **Phase 3 — Étude systématique** : `experiments/run_study.py` (4 jeux × 5 graines, 2 à 6 qubits, 1 à 4 couches) → `docs/article.tex`
 - [ ] **Phase 4 — Bruit et vrai matériel** : simulation avec shots et bruit, puis exécution sur IBM Quantum (`qiskit-ibm-runtime`, compte gratuit)
 - [ ] **Phase 5 — Rapport** : compléter `docs/rapport.tex` avec les résultats et l'analyse
 
-## Compiler le rapport
+## Rapport et article
 
 ```bash
+python experiments/run_study.py          # ~10 min : régénère tableaux et figures de l'article
 cd docs
+pdflatex article.tex && pdflatex article.tex
 pdflatex rapport.tex && pdflatex rapport.tex
 ```
+
+**Principaux résultats de l'article** : le SVM à noyau quantique égale le meilleur modèle classique sur 3 jeux de
+données sur 4 sans jamais le dépasser ; le classifieur variationnel reste en retrait, se dégrade au-delà de 3 qubits
+et s'entraîne environ 10 000 fois plus lentement qu'un SVM classique (simulation sans bruit).
 (ou importer le dossier `docs/` et `results/` dans Overleaf). Le rapport inclut automatiquement `results/moons_2q.tex` s'il existe.
 
 ## Licence
