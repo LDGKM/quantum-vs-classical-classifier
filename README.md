@@ -22,7 +22,7 @@ Projet 1 sur 4 d'une série IA × informatique quantique :
 
 | | Comment |
 |---|---|
-| 🌐 **En ligne** | Ouvrir le lien du Space Hugging Face : `https://huggingface.co/spaces/<pseudo-hf>/quantum-vs-classical-classifier` |
+| 🌐 **En ligne** | Ouvrir [l'application en ligne](https://huggingface.co/spaces/d3oloutou/quantum-vs-classical-classifier) |
 | 🪟 🍎 🐧 **Hors ligne** | Télécharger le fichier de son système dans les [Releases](https://github.com/LDGKM/quantum-vs-classical-classifier/releases), le dézipper et le lancer |
 
 L'application permet de choisir le jeu de données, le nombre de qubits et de couches, puis affiche
