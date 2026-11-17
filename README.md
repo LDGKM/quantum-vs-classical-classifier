@@ -22,7 +22,7 @@ Projet 1 sur 4 d'une série IA × informatique quantique :
 
 | | Comment |
 |---|---|
-| 🌐 **En ligne** | Ouvrir [l'application en ligne](https://huggingface.co/spaces/d3oloutou/quantum-vs-classical-classifier) |
+| 🌐 **En ligne** | Ouvrir [l'application en ligne](https://quantique-vs-classique.streamlit.app) |
 | 🪟 🍎 🐧 **Hors ligne** | Télécharger le fichier de son système dans les [Releases](https://github.com/LDGKM/quantum-vs-classical-classifier/releases), le dézipper et le lancer |
 
 L'application permet de choisir le jeu de données, le nombre de qubits et de couches, puis affiche
@@ -33,14 +33,17 @@ le tableau comparatif, les graphiques, le circuit quantique entraîné et sa fro
 
 ### Mise en ligne (une seule fois, pour le mainteneur)
 
-**Application web.** Le workflow `.github/workflows/deploy-hf-space.yml` publie l'application sur Hugging Face
-à chaque push sur `main`.
-1. Sur huggingface.co : *Settings* → *Access Tokens* → *Create new token*, type **Write**. Copier le jeton.
-2. Sur GitHub, dans ce dépôt : *Settings* → *Secrets and variables* → *Actions* :
-   - onglet **Secrets** → *New repository secret* : nom `HF_TOKEN`, valeur = le jeton ;
-   - onglet **Variables** → *New repository variable* : nom `HF_USERNAME`, valeur = votre pseudo Hugging Face.
-3. Pousser sur `main` (ou *Actions* → *Déployer sur Hugging Face* → *Run workflow*). Le Space est créé automatiquement ;
-   la première construction prend environ 5 minutes.
+**Application web** (Streamlit Community Cloud, gratuit pour les dépôts publics) :
+1. Aller sur [share.streamlit.io](https://share.streamlit.io) et se connecter avec GitHub.
+2. *Create app* → *Deploy a public app from GitHub* :
+   - Repository : `LDGKM/quantum-vs-classical-classifier`, branche `main` ;
+   - Main file path : `streamlit_cloud/streamlit_app.py` ;
+   - App URL : `quantique-vs-classique` ;
+   - *Advanced settings* → Python **3.12**.
+3. *Deploy*. La première installation prend quelques minutes ; ensuite, chaque push sur `main` met l'application à jour.
+
+> Le dossier `streamlit_cloud/` contient un `requirements.txt` réduit aux dépendances de l'application.
+> Le `Dockerfile` permet aussi d'héberger l'application sur toute plateforme acceptant Docker.
 
 **Exécutables.** Le workflow `.github/workflows/build-apps.yml` construit l'application sur Windows, macOS et Linux
 (un exécutable ne fonctionne que sur le système où il a été construit), vérifie qu'elle démarre, puis la publie :
@@ -105,9 +108,10 @@ de paramètres que le réseau de neurones. Toute la question du projet est de sa
 ├── requirements.txt            dépendances de développement
 ├── requirements-app.txt        dépendances de l'application seule
 ├── run_benchmark.py            comparaison en ligne de commande
-├── Dockerfile, space/          application web sur Hugging Face Spaces
+├── streamlit_cloud/            point d'entrée de l'application en ligne
+├── Dockerfile                  image Docker de l'application (hébergement alternatif)
 ├── packaging/                  construction des exécutables (PyInstaller)
-├── .github/workflows/          déploiement web et exécutables automatiques
+├── .github/workflows/          construction automatique des exécutables
 ├── src/qvc/
 │   ├── data.py                 jeux de données → ACP → angles dans [0, π]
 │   ├── classical.py            modèles de référence
