@@ -1,0 +1,66 @@
+# Publie l'application web sur Hugging Face Spaces à chaque push sur main.
+#
+# Configuration (une seule fois, dans GitHub > Settings > Secrets and variables > Actions) :
+#   - Secret   HF_TOKEN     : jeton Hugging Face avec le droit "Write"
+#   - Variable HF_USERNAME  : votre nom d'utilisateur Hugging Face
+name: Déployer sur Hugging Face
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app.py"
+      - "src/**"
+      - "requirements-app.txt"
+      - "Dockerfile"
+      - "space/**"
+      - ".streamlit/**"
+      - ".github/workflows/deploy-hf-space.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_USERNAME: ${{ vars.HF_USERNAME }}
+      SPACE_NAME: quantum-vs-classical-classifier
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier la configuration
+        run: |
+          if [ -z "$HF_TOKEN" ] || [ -z "$HF_USERNAME" ]; then
+            echo "::error::Ajoutez le secret HF_TOKEN et la variable HF_USERNAME (voir README, section Application)."
+            exit 1
+          fi
+
+      - name: Préparer le contenu du Space
+        run: |
+          mkdir -p build
+          cp -r app.py src requirements-app.txt Dockerfile .streamlit build/
+          cp space/README.md build/README.md
+          find build -name "__pycache__" -prune -exec rm -rf {} +
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Publier sur Hugging Face
+        run: |
+          pip install -q huggingface_hub
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          repo_id = f"{os.environ['HF_USERNAME']}/{os.environ['SPACE_NAME']}"
+          api.create_repo(repo_id, repo_type="space", space_sdk="docker", exist_ok=True)
+          api.upload_folder(
+              folder_path="build",
+              repo_id=repo_id,
+              repo_type="space",
+              commit_message=f"Déploiement depuis GitHub ({os.environ['GITHUB_SHA'][:7]})",
+          )
+          print(f"Application : https://huggingface.co/spaces/{repo_id}")
+          PY

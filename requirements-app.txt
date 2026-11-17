@@ -1,0 +1,8 @@
+# Dépendances minimales de l'application (web et exécutables).
+# Pour développer (notebooks, Qiskit, tests), utiliser requirements.txt.
+streamlit>=1.40
+pennylane>=0.42
+scikit-learn>=1.5
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8

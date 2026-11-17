@@ -1,0 +1,99 @@
+# Construit l'application autonome pour Windows, macOS et Linux.
+#
+# - Lancement manuel (onglet Actions > "Construire les applications" > Run workflow) :
+#   les fichiers sont disponibles dans les "Artifacts" de l'exécution.
+# - Création d'un tag v* (ex. : git tag v0.1.0 && git push --tags) :
+#   les fichiers sont en plus publiés dans une Release GitHub.
+name: Construire les applications
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: QuantiqueVsClassique-Windows.zip
+          - os: macos-latest          # Mac à puce Apple (M1 et suivants)
+            asset: QuantiqueVsClassique-macOS.zip
+          - os: ubuntu-latest
+            asset: QuantiqueVsClassique-Linux.tar.gz
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-app.txt
+
+      - name: Installer les dépendances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-app.txt pyinstaller
+
+      - name: Construire l'exécutable
+        run: python packaging/build.py
+
+      - name: Vérifier que l'application démarre
+        run: |
+          EXE=dist/QuantiqueVsClassique
+          [ "$RUNNER_OS" = "Windows" ] && EXE="$EXE.exe"
+          "$EXE" > app.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:8501/_stcore/health; then echo " -> OK"; exit 0; fi
+            sleep 2
+          done
+          echo "L'application n'a pas démarré :"; cat app.log; exit 1
+
+      - name: Empaqueter
+        run: |
+          cd dist
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            7z a "../${{ matrix.asset }}" QuantiqueVsClassique.exe
+          elif [ "$RUNNER_OS" = "macOS" ]; then
+            zip -9 "../${{ matrix.asset }}" QuantiqueVsClassique
+          else
+            tar -czf "../${{ matrix.asset }}" QuantiqueVsClassique
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: assets/*
+          body: |
+            Application autonome : aucune installation nécessaire.
+
+            | Système | Fichier | Lancement |
+            |---|---|---|
+            | Windows | `QuantiqueVsClassique-Windows.zip` | Dézipper, double-cliquer sur `QuantiqueVsClassique.exe`. Si Windows affiche « Windows a protégé votre ordinateur » : *Informations complémentaires* > *Exécuter quand même*. |
+            | macOS (puce Apple) | `QuantiqueVsClassique-macOS.zip` | Dézipper, clic droit sur `QuantiqueVsClassique` > *Ouvrir* (la première fois). |
+            | Linux | `QuantiqueVsClassique-Linux.tar.gz` | `tar -xzf` puis `./QuantiqueVsClassique` |
+
+            L'application s'ouvre dans le navigateur (le premier démarrage prend 10 à 30 secondes). Fermez la fenêtre du terminal pour l'arrêter.
